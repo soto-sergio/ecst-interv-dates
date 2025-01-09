@@ -50,8 +50,8 @@ def auto_mate_test(final_attendance):
     driver.find_element_by_xpath('//*[@id="ecstSubmit"]').click()
     time.sleep(2)
     driver.find_element_by_xpath('//*[@id="inner"]/form/input[1]').click()
-     # Reading Intervention
-    if intervention == "Reading":
+     # Math Intervention
+    if intervention == "Math":
         for i in final_attendance:
             driver.find_element_by_xpath('//*[@id="searchTable"]/tbody/tr[3]/td/input').send_keys(i)
             time.sleep(2)
@@ -85,8 +85,8 @@ def auto_mate_test(final_attendance):
                     driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click()   # Save
                     driver.find_element_by_xpath('//*[@id="logo"]').click()     # Go to student search page   
 
-    # Math Intervention
-    if intervention == "Math":
+    # Reading Intervention
+    if intervention == "Reading":
         for i in final_attendance:
             driver.find_element_by_xpath('//*[@id="searchTable"]/tbody/tr[3]/td/input').send_keys(i)
             time.sleep(2)

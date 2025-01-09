@@ -7,6 +7,7 @@ dependencies:
   - selenium=3.141.0=py39h2bbff1b_1000
   - pandas=1.5.2=py39hf11a4ad_0
   - openpyxl=3.0.10=py39h2bbff1b_0
-  #- tkcalendar=1.6.1=pypi_0
+  - pip:
+    - tkcalendar==1.6.1
 
 prefix: C:\Users\Checo\Anaconda3\envs\eduenv
