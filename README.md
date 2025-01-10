@@ -41,7 +41,7 @@ e. Create environment variables
 
 
 ## NOTES
->
+> * Must create Reading intervention first before Math one. 
 > * Amount of minutes of each intervention entry is set to 30. Changing it seems to produce an error.
 
 

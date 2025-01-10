@@ -50,14 +50,23 @@ def auto_mate_test(final_attendance):
     driver.find_element_by_xpath('//*[@id="ecstSubmit"]').click()
     time.sleep(2)
     driver.find_element_by_xpath('//*[@id="inner"]/form/input[1]').click()
-     # Math Intervention
-    if intervention == "Math":
+     # Reading Intervention
+    if intervention == "Reading":
         for i in final_attendance:
             driver.find_element_by_xpath('//*[@id="searchTable"]/tbody/tr[3]/td/input').send_keys(i)
             time.sleep(2)
             driver.find_element_by_xpath('//*[@id="searchTable"]/tbody/tr[7]/th/input').click()
             time.sleep(2)
-            driver.find_element_by_xpath('//*[@id="inner"]/table[4]/tbody/tr[2]/td[1]/div[5]/ul/li[2]/a').click()
+            
+            # Try different student page format
+            try:
+                # Path 1
+                link = driver.find_element_by_xpath('//*[@id="inner"]/table[4]/tbody/tr[2]/td[1]/div[5]/ul/li[2]/a')
+                link.click()
+            except Exception:
+                # Path 2
+                link = driver.find_element_by_xpath('//*[@id="inner"]/table[4]/tbody/tr[2]/td[1]/div[6]/ul/li[2]/a')
+                link.click()
             time.sleep(2)
 
             # Check for empty box
@@ -85,14 +94,22 @@ def auto_mate_test(final_attendance):
                     driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click()   # Save
                     driver.find_element_by_xpath('//*[@id="logo"]').click()     # Go to student search page   
 
-    # Reading Intervention
-    if intervention == "Reading":
+    # Math Intervention
+    if intervention == "Math":
         for i in final_attendance:
             driver.find_element_by_xpath('//*[@id="searchTable"]/tbody/tr[3]/td/input').send_keys(i)
             time.sleep(2)
             driver.find_element_by_xpath('//*[@id="searchTable"]/tbody/tr[7]/th/input').click()
             time.sleep(2)
-            driver.find_element_by_xpath('//*[@id="inner"]/table[4]/tbody/tr[2]/td[1]/div[5]/ul/li[1]/a').click()
+            
+            try:
+                # Path 1
+                link = driver.find_element_by_xpath('//*[@id="inner"]/table[4]/tbody/tr[2]/td[1]/div[5]/ul/li[1]/a')
+                link.click()
+            except Exception:
+                # Path 2
+                link = driver.find_element_by_xpath('//*[@id="inner"]/table[4]/tbody/tr[2]/td[1]/div[6]/ul/li[1]/a')
+                link.click()
             time.sleep(2)
 
             # Check for empty box
