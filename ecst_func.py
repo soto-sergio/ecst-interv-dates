@@ -34,7 +34,7 @@ def load_dict(pkl_file: str):
 def auto_mate_test(final_attendance):
 
     # Intervention minutes
-    minutes = 30
+    minutes = 45
     print('Hi ' +username + ' from auto_mate_test. You want to document a ' + intervention + ' intervention on ' + selectedDate)
     homeroom_roster = homeroom_dict
     
@@ -79,7 +79,8 @@ def auto_mate_test(final_attendance):
                  driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutesDate').send_keys(selectedDate) # Date Box
                  driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutes').send_keys(minutes)  # Minutes Box  
                  time.sleep(2)
-                 driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click()   # Save
+                 try: driver.find_element_by_xpath('//*[@id="aipForm"]/div[4]/input').click()   # Save 
+                 except Exception: driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click() #Save
                  driver.find_element_by_xpath('//*[@id="logo"]').click()     # Go to student search page   
             else:
                 k = k+1
@@ -91,7 +92,8 @@ def auto_mate_test(final_attendance):
                     driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutesDate').send_keys(selectedDate) # Date Box
                     driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutes').send_keys(minutes)  # Minutes Box  
                     time.sleep(3)
-                    driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click()   # Save
+                    try: driver.find_element_by_xpath('//*[@id="aipForm"]/div[4]/input').click()   # Save 
+                    except Exception: driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click() #Save
                     driver.find_element_by_xpath('//*[@id="logo"]').click()     # Go to student search page   
 
     # Math Intervention
@@ -122,7 +124,8 @@ def auto_mate_test(final_attendance):
                  driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutesDate').send_keys(selectedDate) # Date Box
                  driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutes').send_keys(minutes)  # Minutes Box  
                  time.sleep(2)
-                 driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click()   # Save
+                 try: driver.find_element_by_xpath('//*[@id="aipForm"]/div[4]/input').click()   # Save 
+                 except Exception: driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click() #Save  
                  driver.find_element_by_xpath('//*[@id="logo"]').click()     # Go to student search page   
             else:
                 k = k+1
@@ -134,7 +137,8 @@ def auto_mate_test(final_attendance):
                     driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutesDate').send_keys(selectedDate) # Date Box
                     driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutes').send_keys(minutes)  # Minutes Box  
                     time.sleep(2)
-                    driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click()   # Save
+                    try: driver.find_element_by_xpath('//*[@id="aipForm"]/div[4]/input').click()   # Save 
+                    except Exception: driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click() #Save 
                     driver.find_element_by_xpath('//*[@id="logo"]').click()     # Go to student search page  
 
     driver.close()
