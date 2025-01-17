@@ -14,5 +14,5 @@ echo Setting up environment...
 conda env create -f environment.yml
 conda activate eduenv
 
-echo Setup complete! You can now run the project.
+echo Setup complete!! You can now run the project.
 pause

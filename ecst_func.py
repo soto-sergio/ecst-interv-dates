@@ -81,7 +81,7 @@ def auto_mate_test(final_attendance):
                  time.sleep(2)
                  try: driver.find_element_by_xpath('//*[@id="aipForm"]/div[4]/input').click()   # Save 
                  except Exception: driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click() #Save
-                 driver.find_element_by_xpath('//*[@id="logo"]').click()     # Go to student search page   
+                 driver.find_element_by_xpath('//*[@id="logo"]').click()    # Go to student search page   
             else:
                 k = k+1
                 while (check_value !=""):
