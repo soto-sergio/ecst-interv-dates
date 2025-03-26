@@ -81,7 +81,9 @@ def auto_mate_test(final_attendance):
                  time.sleep(2)
                  try: driver.find_element_by_xpath('//*[@id="aipForm"]/div[4]/input').click()   # Save 
                  except Exception: driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click() #Save
-                 driver.find_element_by_xpath('//*[@id="logo"]').click()    # Go to student search page   
+                 #driver.find_element_by_xpath('//*[@id="logo"]/').click()    # Go to student search page   
+                 time.sleep(2)
+                 driver.find_element_by_xpath('/html/body/div[1]/div/table[1]/tbody/tr[1]/td[1]/a').click()   # Go to student search page
             else:
                 k = k+1
                 while (check_value !=""):
@@ -94,7 +96,9 @@ def auto_mate_test(final_attendance):
                     time.sleep(3)
                     try: driver.find_element_by_xpath('//*[@id="aipForm"]/div[4]/input').click()   # Save 
                     except Exception: driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click() #Save
-                    driver.find_element_by_xpath('//*[@id="logo"]').click()     # Go to student search page   
+                    #driver.find_element_by_xpath('//*[@id="logo"]').click()     # Go to student search page
+                    time.sleep(2)    
+                    driver.find_element_by_xpath('/html/body/div[1]/div/table[1]/tbody/tr[1]/td[1]/a').click()  # Go to student search page
 
     # Math Intervention
     if intervention == "Math":
@@ -126,7 +130,9 @@ def auto_mate_test(final_attendance):
                  time.sleep(2)
                  try: driver.find_element_by_xpath('//*[@id="aipForm"]/div[4]/input').click()   # Save 
                  except Exception: driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click() #Save  
-                 driver.find_element_by_xpath('//*[@id="logo"]').click()     # Go to student search page   
+                 #driver.find_element_by_xpath('//*[@id="logo"]').click()     # Go to student search page
+                 time.sleep(2)   
+                 driver.find_element_by_xpath('/html/body/div[1]/div/table[1]/tbody/tr[1]/td[1]/a').click()  # Go to student search page
             else:
                 k = k+1
                 while (check_value !=""):
@@ -139,7 +145,9 @@ def auto_mate_test(final_attendance):
                     time.sleep(2)
                     try: driver.find_element_by_xpath('//*[@id="aipForm"]/div[4]/input').click()   # Save 
                     except Exception: driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click() #Save 
-                    driver.find_element_by_xpath('//*[@id="logo"]').click()     # Go to student search page  
+                    # driver.find_element_by_xpath('//*[@id="logo"]').click()     # Go to student search page   
+                    time.sleep(2)
+                    driver.find_element_by_xpath('/html/body/div[1]/div/table[1]/tbody/tr[1]/td[1]/a').click()   # Go to student search page  
 
     driver.close()
     cancel_button()
