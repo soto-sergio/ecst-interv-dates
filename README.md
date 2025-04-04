@@ -15,7 +15,7 @@ a. Open Windows Command Prompt and Install Git using `winget install --id Git.Gi
 
 b. Create folder to download Git Repository and initialize git with `git init` in the CMD 
 
-c. Pull repo with ` git pull https://github.com/soto-sergio/ecst-interv-v3.git`  
+c. Pull repo with ` git pull https://github.com/soto-sergio/ecst-interv-dates.git`  
 
 d. Install miniconda using  `winget install -e --id Anaconda.Miniconda3`  
 
