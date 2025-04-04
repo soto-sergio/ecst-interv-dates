@@ -1,216 +1,252 @@
-#### Import
 import time
 import pandas as pd
-import pickle as pkl # to save dictionaries as py file
+import pickle as pkl
 from datetime import datetime
 from tkcalendar import DateEntry
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
 import tkinter as tk
 
-#### Global variables
-username = ""
-password = ""
+# Global Variables
+username, password, intervention, selectedDates = "", "", "", []
+homeroom_dict = {}
 
-#### Data Preprocessing
-## Convert to dictionary and save as py file. student_id : student_name
-
+# Data Preprocessing (unchanged)
 def csv_to_dict(csv_path: str, key_col: int, value_col: int):
-    df = pd.read_csv(csv_path, index_col=None, header=None)
+    """Convert CSV to dictionary and save as pickle."""
+    df = pd.read_csv(csv_path, header=None)
     data_dict = df.set_index(key_col)[value_col].to_dict()
-    # Save dictionary
-    with open("data/clean/hr_dict.pkl","wb") as f:   #wb mode (write binary)
+
+    with open("data/clean/hr_dict.pkl", "wb") as f:
         pkl.dump(data_dict, f)
+
     return data_dict
 
 def load_dict(pkl_file: str):
-    with open(pkl_file, "rb") as f:   #read binary
-         dict = pkl.load(f)
-    return dict   
+    """Load dictionary from pickle file."""
+    with open(pkl_file, "rb") as f:
+        return pkl.load(f)
 
-####---------------------------------------------------------------------------------------------------------------------
+def get_dict(dict_callback):
+    """Store dictionary globally for later use."""
+    global homeroom_dict
+    homeroom_dict = dict_callback
 
-#### Automatization with Selenium
+# Selenium Automation
 def auto_mate_test(final_attendance):
-
-    # Intervention minutes
+    """Automate data entry using Selenium."""
     minutes = 45
-    print('Hi ' +username + ' from auto_mate_test. You want to document a ' + intervention + ' intervention on ' + selectedDate)
-    homeroom_roster = homeroom_dict
-    
-    # eCST Login
+
+    print(f"Hi {username}, you want to document a {intervention} intervention on {selectedDates}")
+
+    # Open browser and login
     time.sleep(3)
     driver = webdriver.Chrome('chromedriver.exe')
-    wait = WebDriverWait(driver, 2)
-    website = driver.get("https://access.austinisd.org/ACM/agreement.htm") 
-    driver.find_element_by_xpath('//*[@id="uname"]').send_keys(username)  # Pass username
-    time.sleep(1)
-    driver.find_element_by_xpath('//*[@id="pwd"]').send_keys(password)    # Pass password
+    driver.get("https://access.austinisd.org/ACM/agreement.htm")
+    
+    wait = WebDriverWait(driver, 10)
+    driver.find_element(By.ID, "uname").send_keys(username)
+    driver.find_element(By.ID, "pwd").send_keys(password)
+    driver.find_element(By.ID, "ecstSubmit").click()
     time.sleep(2)
-    driver.find_element_by_xpath('//*[@id="ecstSubmit"]').click()
-    time.sleep(2)
-    driver.find_element_by_xpath('//*[@id="inner"]/form/input[1]').click()
-     # Reading Intervention
-    if intervention == "Reading":
-        for i in final_attendance:
-            driver.find_element_by_xpath('//*[@id="searchTable"]/tbody/tr[3]/td/input').send_keys(i)
-            time.sleep(2)
-            driver.find_element_by_xpath('//*[@id="searchTable"]/tbody/tr[7]/th/input').click()
-            time.sleep(2)
-            
-            # Try different student page format
+    # Navigate to student search
+    driver.find_element(By.XPATH, '//*[@id="inner"]/form/input[1]').click()
+
+
+   # Process each student
+    for student_id in final_attendance:
+        driver.find_element(By.XPATH, '//*[@id="searchTable"]/tbody/tr[3]/td/input').send_keys(student_id)
+        driver.find_element(By.XPATH, '//*[@id="searchTable"]/tbody/tr[7]/th/input').click()
+        time.sleep(2)
+
+    # Select intervention type
+        #try:
+        #    if intervention == "Math":
+        #        try:
+        #             link = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="inner"]/table[4]/tbody/tr[2]/td[1]/div[5]/ul/li[1]/a')))
+        #             link.click()
+        #         except Exception:
+        #             link = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="inner"]/table[4]/tbody/tr[2]/td[1]/div[6]/ul/li[1]/a')))
+        #             link.click()
+        #     else:  # Reading intervention
+        #         try:
+        #             link = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="inner"]/table[4]/tbody/tr[2]/td[1]/div[5]/ul/li[2]/a')))
+        #             link.click()
+        #         except Exception:
+        #             link = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="inner"]/table[4]/tbody/tr[2]/td[1]/div[6]/ul/li[2]/a')))
+        #             link.click()
+        # except Exception:
+        #     print("Intervention link not found.")
+        #     continue  # Skip to the next student if the intervention link is missing
+        try:
+            if intervention == "Math":
+                link = wait.until(EC.element_to_be_clickable((By.XPATH, "//a[contains(@href, 'aipEdit.htm') and contains(@href, 'type=M')]")))
+            else:  # Reading intervention
+                link = wait.until(EC.element_to_be_clickable((By.XPATH, "//a[contains(@href, 'aipEdit.htm') and contains(@href, 'type=R')]")))
+
+            link.click()
+        except Exception:
+            print(f"Intervention link not found for student {student_id}. Skipping to next student.")
+            continue  # Skip to the next student if the intervention link is missing
+
+
+    # Process all date batches before moving to the next student
+        
+       # Process dates in batches of 5
+        for i in range(0, len(selectedDates), 5):
+            batch = selectedDates[i:i + 5]
+            k = 0  # Reset k for each batch
+
+            for date in batch:
+                while True:
+                    try:
+                        # Wait for the date field to be visible and interactable
+                        date_box = wait.until(EC.visibility_of_element_located((By.NAME, f'aipMeetingMinutesDateList[{k}].aipMeetingMinutesDate')))
+
+                        # Check if the field is empty and then fill it
+                        if not date_box.get_attribute("value"):
+                            date_box.send_keys(date)
+                            driver.find_element(By.NAME, f'aipMeetingMinutesDateList[{k}].aipMeetingMinutes').send_keys(minutes)
+                            k += 1  # Move to the next field after filling this one
+                            break  # Break the inner while loop after entering the date
+                        else:
+                            k += 1  # If field is filled, check the next one
+                    except Exception as e:
+                        print(f"Error while processing date field: {e}")
+                        time.sleep(1)  # Wait a bit before retrying
+                        continue  # Continue to the next date field attempt
+
+            # Save after every batch of 5 dates
             try:
-                # Path 1
-                link = driver.find_element_by_xpath('//*[@id="inner"]/table[4]/tbody/tr[2]/td[1]/div[5]/ul/li[2]/a')
-                link.click()
-            except Exception:
-                # Path 2
-                link = driver.find_element_by_xpath('//*[@id="inner"]/table[4]/tbody/tr[2]/td[1]/div[6]/ul/li[2]/a')
-                link.click()
-            time.sleep(2)
+                time.sleep(3)
+                save_button = driver.find_element(By.XPATH, "//input[@name='action'][@value='Save']")
+                save_button.click()
+                time.sleep(2)  # Wait for save action to complete
 
-            # Check for empty box
-            k = 0
-            check_box = driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutesDate')
-            check_value = check_box.get_attribute('value')
+                # Ensure we're still on the same page before entering the next batch
+                wait.until(EC.presence_of_element_located((By.NAME, f'aipMeetingMinutesDateList[0].aipMeetingMinutesDate')))
+        
+            except Exception as e:
+                print(f"Error while saving: {e}")
+                break  # If saving fails, break the loop to stop further processing
 
+    # Final save after entering all dates
+        try:
+            time.sleep(3)
+            save_button = driver.find_element(By.XPATH, "//input[@name='action'][@value='Save']")
+            save_button.click()
+            time.sleep(2)  # Ensure the final save is completed
+        except Exception as e:
+            print(f"Error while saving for the student: {e}")
 
-            if (check_value == ""):
-                 driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutesDate').send_keys(selectedDate) # Date Box
-                 driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutes').send_keys(minutes)  # Minutes Box  
-                 time.sleep(2)
-                 try: driver.find_element_by_xpath('//*[@id="aipForm"]/div[4]/input').click()   # Save 
-                 except Exception: driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click() #Save
-                 #driver.find_element_by_xpath('//*[@id="logo"]/').click()    # Go to student search page   
-                 time.sleep(2)
-                 driver.find_element_by_xpath('/html/body/div[1]/div/table[1]/tbody/tr[1]/td[1]/a').click()   # Go to student search page
-            else:
-                k = k+1
-                while (check_value !=""):
-                     check_box = driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutesDate')
-                     check_value = check_box.get_attribute('value')
-                     k = k+1
-                else:
-                    driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutesDate').send_keys(selectedDate) # Date Box
-                    driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutes').send_keys(minutes)  # Minutes Box  
-                    time.sleep(3)
-                    try: driver.find_element_by_xpath('//*[@id="aipForm"]/div[4]/input').click()   # Save 
-                    except Exception: driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click() #Save
-                    #driver.find_element_by_xpath('//*[@id="logo"]').click()     # Go to student search page
-                    time.sleep(2)    
-                    driver.find_element_by_xpath('/html/body/div[1]/div/table[1]/tbody/tr[1]/td[1]/a').click()  # Go to student search page
+    # Move to next student only after all dates are entered
+        try: 
+            time.sleep(3)
+            # Scroll and click the homepage link to go back
+            logo_link = wait.until(EC.element_to_be_clickable((By.XPATH, '/html/body/div[1]/div/table[1]/tbody/tr[1]/td[1]/a')))
+            driver.execute_script("arguments[0].scrollIntoView();", logo_link)
+            logo_link.click()
+            print(f"Returned to the homepage after processing student {student_id}.")
+        except Exception as e:
+            print(f"Error navigating back to home for student {student_id}: {e}")
+            break  # If it fails to return to home, stop further processing
+    
+    driver.quit()  # Close the browser after processing all students
 
-    # Math Intervention
-    if intervention == "Math":
-        for i in final_attendance:
-            driver.find_element_by_xpath('//*[@id="searchTable"]/tbody/tr[3]/td/input').send_keys(i)
-            time.sleep(2)
-            driver.find_element_by_xpath('//*[@id="searchTable"]/tbody/tr[7]/th/input').click()
-            time.sleep(2)
-            
-            try:
-                # Path 1
-                link = driver.find_element_by_xpath('//*[@id="inner"]/table[4]/tbody/tr[2]/td[1]/div[5]/ul/li[1]/a')
-                link.click()
-            except Exception:
-                # Path 2
-                link = driver.find_element_by_xpath('//*[@id="inner"]/table[4]/tbody/tr[2]/td[1]/div[6]/ul/li[1]/a')
-                link.click()
-            time.sleep(2)
-
-            # Check for empty box
-            k = 0
-            check_box = driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutesDate')
-            check_value = check_box.get_attribute('value')
-
-
-            if (check_value == ""):
-                 driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutesDate').send_keys(selectedDate) # Date Box
-                 driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutes').send_keys(minutes)  # Minutes Box  
-                 time.sleep(2)
-                 try: driver.find_element_by_xpath('//*[@id="aipForm"]/div[4]/input').click()   # Save 
-                 except Exception: driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click() #Save  
-                 #driver.find_element_by_xpath('//*[@id="logo"]').click()     # Go to student search page
-                 time.sleep(2)   
-                 driver.find_element_by_xpath('/html/body/div[1]/div/table[1]/tbody/tr[1]/td[1]/a').click()  # Go to student search page
-            else:
-                k = k+1
-                while (check_value !=""):
-                     check_box = driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutesDate')
-                     check_value = check_box.get_attribute('value')
-                     k = k+1
-                else:
-                    driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutesDate').send_keys(selectedDate) # Date Box
-                    driver.find_element_by_name('aipMeetingMinutesDateList[' + str(k) + '].aipMeetingMinutes').send_keys(minutes)  # Minutes Box  
-                    time.sleep(2)
-                    try: driver.find_element_by_xpath('//*[@id="aipForm"]/div[4]/input').click()   # Save 
-                    except Exception: driver.find_element_by_xpath('//*[@id="aipForm"]/div[3]/input').click() #Save 
-                    # driver.find_element_by_xpath('//*[@id="logo"]').click()     # Go to student search page   
-                    time.sleep(2)
-                    driver.find_element_by_xpath('/html/body/div[1]/div/table[1]/tbody/tr[1]/td[1]/a').click()   # Go to student search page  
-
-    driver.close()
-    cancel_button()
-
-#### Functions for GUI
-## Date
-def cur_date():
-    global date
-    date = datetime.today().strftime('%m/%d/%Y')
-
-## Get dictionary with homeroom roster data       
-def get_dict(dict_callback):
-    global homeroom_dict
-    homeroom_dict = dict_callback 
-
-## Get login input entered in window 1
+# GUI Functions
 def get_login_input():
-    global username, password, intervention, input_array, selectedDate
+    """Retrieve login details from user input."""
+    global username, password, intervention, selectedDates
     username = user_entry.get()
     password = password_entry.get()
-    intervention =intervention_entry.get()
-    inputs_array  = [username, password, intervention]
-    selectedDate = calendar_entry.get()
-    # Attendance frame
-    window2(mainframe, bg_color)
+    intervention = intervention_entry.get()  # Get selected intervention (Math or Reading)
+    selectedDates = date_listbox.get(0, tk.END)  # Get all selected dates from the Listbox
 
-## Button Actions
-def cancel_button():
-    return exit()
-    
+    window2(mainframe, "#152D2E")
+
 def continue_button():
-    final_attendance=[]
-    
-    a = [int(i.get()) for i in attendance_var]
-    l = 0
-    for x in homeroom_dict:
-        if a[l] == 1:
-            final_attendance.append(x)
-            l = l+1
-        else:
-            l = l+1
-    #print(final_attendance)     
+    """Process attendance selection and start automation."""
+    final_attendance = [k for k, var in zip(homeroom_dict.keys(), attendance_var) if var.get()]
     auto_mate_test(final_attendance)
 
-## Destroy frame to transition from window1 to window2
+def cancel_button():
+    """Exit the application."""
+    exit()
+
 def destroy_frames():
+    """Destroy existing GUI elements."""
     for widget in mainframe.winfo_children():
         widget.destroy()
 
+# GUI Windows
+def window1(frame1, bg_color):
+    """Login window."""
+    global user_entry, password_entry, intervention_entry, calendar_entry, date_listbox
 
-####---------------------------------------------------------------------------------------------------------------------
-#### GUI
-## Attendance Window
+    frame1.pack()
+    tk.Label(frame1, text="eCST Login", bg=bg_color, fg='#DDFFE7', font=("TkMenuFonto", 14)).pack(pady=5)
+
+    tk.Label(frame1, text="E Number:", bg=bg_color, fg="white").pack(pady=10)
+    user_entry = tk.Entry(frame1, width=20)
+    user_entry.pack()
+
+    tk.Label(frame1, text="Password:", bg=bg_color, fg="white").pack(pady=10)
+    password_entry = tk.Entry(frame1, width=20, show="*")
+    password_entry.pack()
+
+    tk.Label(frame1, text="Intervention:", bg=bg_color, fg="white").pack(pady=10)
+    intervention_entry = tk.StringVar(value='- Select -')
+    tk.OptionMenu(frame1, intervention_entry, "Math", "Reading").pack()
+
+    tk.Label(frame1, text="Dates:", bg=bg_color, fg="white").pack(pady=10)
+    
+    # Date Entry and Listbox for selected dates
+    date_entry = DateEntry(frame1, selectmode='day', date_pattern='mm/dd/yyyy')
+    date_entry.pack()
+
+    def add_date():
+        """Add selected date to the listbox."""
+        selected_date = date_entry.get()
+        if selected_date:
+            date_listbox.insert(tk.END, selected_date)
+
+    def remove_date():
+        """Remove selected date from the listbox."""
+        try:
+            selected_index = date_listbox.curselection()
+            date_listbox.delete(selected_index)
+        except IndexError:
+            pass
+
+    # Buttons to add or remove dates
+    tk.Button(frame1, text="Add Date", command=add_date).pack(pady=5)
+    tk.Button(frame1, text="Remove Date", command=remove_date).pack(pady=5)
+
+    # Listbox to display selected dates
+    date_listbox = tk.Listbox(frame1, selectmode=tk.MULTIPLE, height=5, width=20)
+    date_listbox.pack(pady=10)
+
+    tk.Button(frame1, text="Login", command=get_login_input).pack(pady=10)
+
 def window2(mainframe, bg_color):
+    """Attendance selection window."""
     global attendance_var
     destroy_frames()
-    cur_date()
+
+    tk.Label(mainframe, text="Homeroom Roster Attendance", bg=bg_color, fg='#DDFFE7').pack(pady=5)
+
+    attendance_var = [tk.IntVar(value=1) for _ in homeroom_dict]  # Ensures all are defaulted to "Present"
+
+
     # Title Frames
     frame2  = tk.Frame(mainframe, bg =bg_color)
     frame2.tkraise()
     frame2.pack_propagate(True)
     tk.Label(frame2, text = "Homeroom Roster Attendance", bg=bg_color,fg='#DDFFE7', font = ("TkMenuFonto", 14)).pack(pady=5)   #Homeroom Roster Attendance -  Title Label
-    tk.Label(frame2, text = selectedDate, bg = bg_color, fg = "light grey", font = ("TkMenuFonto", 12)).pack(pady = 10)   # Date Label
+    tk.Label(frame2, text = selectedDates, bg = bg_color, fg = "light grey", font = ("TkMenuFonto", 12)).pack(pady = 10)   # Date Label
     frame2.pack()
 
     # Horizontal Frame with Labels Studen name, Present , Absent
@@ -250,43 +286,7 @@ def window2(mainframe, bg_color):
     frame5.grid_columnconfigure(1,weight = 1)
     frame5.pack(fill="x")
 
-## Login Window
-def window1(frame1,bg_color):
-    global user_entry, password_entry, intervention_entry, calendar_entry
-    ### frame1 widgets
-    frame1.pack()
-    frame1.pack_propagate(False) 
-    cur_date()
-    
 
-    tk.Label(  frame1, text = "eCST Login", bg=bg_color, fg='#DDFFE7' ,font = ("TkMenuFonto", 14)).pack(pady = 5)       # ecst Login - Title Label
-    ### E number
-    tk.Label(  frame1, text = "E Number: ", bg = bg_color, fg = "white", font = ("TkMenuFonto", 12)).pack(pady = 10)   
-    user_entry = tk.Entry(  frame1, bg='white', width = 20)
-    user_entry.pack(pady = 5)
-    
-    ### Password
-    tk.Label(  frame1, text = "Password: ", bg = bg_color, fg = "white", font = ("TkMenuFonto", 12)).pack(pady = 10)
-    password_entry = tk.Entry(  frame1, bg='white', width = 20, show = "*")
-    password_entry.pack(pady = 5)
-
-    ### Intervention
-    tk.Label( frame1, text = "Intervention: ", bg = bg_color, fg = "white", font = ("TkMenuFonto", 12)).pack(pady = 10)
-    intrvOptions = ['- Select -','Math', 'Reading']  
-    intervention_entry = tk.StringVar(value = intrvOptions[0])                             
-    dropdownIntrv = tk.OptionMenu( frame1, intervention_entry, *intrvOptions)
-    dropdownIntrv.pack(pady = 5)     #Store credentials and intervention selection in an array
-
-    #### Date 
-    
-    tk.Label( frame1, text = "Date: ", bg = bg_color, fg = "white", font = ("TkMenuFonto", 12)).pack(pady = 10)
-    calendar_entry = DateEntry(frame1, selectmode ='day', date_pattern='mm/dd/yyyy')  
-    calendar_entry.pack(pady=5)
-
-    ## Login Button (New)        
-    login_button= tk.Button( frame1, text = "Login",bg='light grey'  , command = get_login_input)
-    login_button.pack(pady = 30)
-    
 ## Main frame tkinter
 def tk_root():
     global mainframe, frame1, bg_color
@@ -295,9 +295,7 @@ def tk_root():
     bg_color = "#3d6466"
     mainframe = tk.Frame(root, bg= bg_color)
     mainframe.pack(fill= "both", expand = True)
-    frame1  = tk.Frame(mainframe , width= 300 , height = 500, bg=bg_color)
+    frame1  = tk.Frame(mainframe , width= 400 , height = 600, bg=bg_color)
     window1(frame1 , bg_color)
 
     root.mainloop()
-
-#### -------------------------------------------------------------------------------------------------
